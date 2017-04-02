@@ -44,8 +44,8 @@ window.onload = function () {
 
 
     // Chargement du plateau de jeu
-    for (var ligne=0; ligne<550; ligne+=50){
-        for (var colonne=0; colonne<550; colonne+=50){
+    for (var ligne=0; ligne<largeur*11; ligne+=largeur){
+        for (var colonne=0; colonne<largeur*11; colonne+=largeur){
             charger_image('rond.jpg', ligne, colonne);
         }
     }
@@ -60,8 +60,8 @@ window.onload = function () {
 
 
     canvas1.onclick = function (event) {
-        var X = event.clientX - event.clientX % 50;
-        var Y = event.clientY - event.clientY % 50;
+        var X = event.clientX - event.clientX % largeur;
+        var Y = event.clientY - event.clientY % largeur;
         if ((X != chat_x || Y != chat_y) && (contains(cases_vertes, [X, Y]) == false)) {
 
             charger_image('rond2.jpg', X, Y);
@@ -71,17 +71,17 @@ window.onload = function () {
             var chat_new_y = chat_y;
 
             if (X > chat_x){
-                chat_new_x -= 50;
+                chat_new_x -= largeur;
             }
             else if (X < chat_x){
-                chat_new_x += 50;
+                chat_new_x += largeur;
             }
 
             if (Y > chat_y){
-                chat_new_y -= 50;
+                chat_new_y -= largeur;
             }
             else if (Y < chat_y){
-                chat_new_y += 50;
+                chat_new_y += largeur;
             }
 
             // si la cases où le chat veut aller n'est pas vertes
@@ -94,7 +94,7 @@ window.onload = function () {
             // si cette case est verte
             else {
                 var cases_possibles = [];
-                var cases_dispo = [[chat_x+50, chat_y+50], [chat_x+50, chat_y-50], [chat_x-50, chat_y+50], [chat_x-50, chat_y-50],  [chat_x, chat_y-50], [chat_x, chat_y+50], [chat_x+50, chat_y], [chat_x-50, chat_y]];
+                var cases_dispo = [[chat_x+largeur, chat_y+largeur], [chat_x+largeur, chat_y-largeur], [chat_x-largeur, chat_y+largeur], [chat_x-largeur, chat_y-largeur],  [chat_x, chat_y-largeur], [chat_x, chat_y+largeur], [chat_x+largeur, chat_y], [chat_x-largeur, chat_y]];
                 for (var i=0; i<cases_dispo.length; i++) {
                     if (contains(cases_vertes, cases_dispo[i]) == false) {
                         cases_possibles.push([cases_dispo[i][0], cases_dispo[i][1]]);
