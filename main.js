@@ -46,7 +46,12 @@ window.onload = function () {
     // Chargement du plateau de jeu
     for (var ligne=0; ligne<largeur*11; ligne+=largeur){
         for (var colonne=0; colonne<largeur*11; colonne+=largeur){
-            charger_image('rond.jpg', ligne, colonne);
+            if ((colonne / largeur) % 2 == 0){
+                charger_image('rond.jpg', ligne + largeur / 2, colonne);
+            }
+            else{
+                charger_image('rond.jpg', ligne, colonne);
+            }
         }
     }
 
