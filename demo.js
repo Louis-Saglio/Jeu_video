@@ -1,4 +1,8 @@
 /**
+ * Created by Louis Saglio on 03/04/2017.
+ */
+
+/**
  * Created by Louis Saglio on 31/03/2017.
  */
 
@@ -46,12 +50,7 @@ window.onload = function () {
     // Chargement du plateau de jeu
     for (var ligne=0; ligne<largeur*11; ligne+=largeur){
         for (var colonne=0; colonne<largeur*11; colonne+=largeur){
-            if ((colonne / largeur) % 2 == 0){
-                charger_image('rond.jpg', ligne + largeur / 2, colonne);
-            }
-            else{
                 charger_image('rond.jpg', ligne, colonne);
-            }
         }
     }
 
@@ -67,23 +66,6 @@ window.onload = function () {
     canvas1.onclick = function (event) {
         var X = event.clientX - event.clientX % largeur;
         var Y = event.clientY - event.clientY % largeur;
-
-        if ((Y / largeur) % 2 == 0){
-            console.log("souris", event.clientX);
-            //console.log("tronqué", X);
-            if ((X % largeur) / largeur == 0){
-                X = X - (largeur/2);
-                console.log("calculé", X);
-            }
-            else{
-                X += largeur;
-                console.log('rr');
-            }
-        }
-        else {
-            console.log('ligne impaire');
-        }
-
 
         if ((X != chat_x || Y != chat_y) && (contains(cases_vertes, [X, Y]) == false)) {
 
