@@ -122,6 +122,4 @@ window.onload = function () {
 
         }
     };
-
-
 };
