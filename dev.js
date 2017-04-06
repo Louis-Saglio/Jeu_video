@@ -75,6 +75,36 @@ window.onload = function () {
             this.plateau[this.chat.x][this.chat.y].set_apparence("chat.png");
         },
 
+
+        move_chat : function (dir) {
+            var y = 1;
+            if (dir[0] === "h") {
+                y = -1;
+            }
+            if (dir[1] === "g") {
+                var x = -1;
+                if (this.chat.y % 2 === 0) {
+                    x = 0;
+                }
+            }
+            if (dir[1] === "d") {
+                var x = 0;
+                if (this.chat.y % 2 === 0) {
+                    x = 1;
+                }
+            }
+            if (dir[0] === "m") {
+                y = 0;
+                if (dir[1] === "g") {
+                    x = -1;
+                }
+                if (dir[1] === "d") {
+                    x = 1;
+                }
+            }
+            this.set_chat(this.chat.x + x, this.chat.y + y);
+        },
+
         refresh : function () {
             for (var ligne=0; ligne<this.largeur_plateau; ligne+=1) {
                 for (var colonne = 0; colonne < this.largeur_plateau; colonne += 1) {
@@ -102,6 +132,7 @@ window.onload = function () {
         var X = event.clientX;
         var Y = event.clientY;
         a.onMouse_case(X, Y).set_apparence("rond2.jpg");
+        a.move_chat("mg");
         a.refresh();
     }
 
