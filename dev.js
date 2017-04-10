@@ -10,7 +10,7 @@ window.onload = function () {
     }
 
     function hasard_item(liste) {
-        return liste[hasard(0, liste.length)];
+        return liste[hasard(0, liste.length-1)];
     }
 
     function hasard_pol(val) {
@@ -24,6 +24,11 @@ window.onload = function () {
 
     function print(param) {
         console.log(param);
+    }
+
+    function append(liste, item) {
+        liste.push(item);
+        return liste.reverse();
     }
 
     var canvas1 = document.getElementById("canvas");
@@ -92,11 +97,16 @@ window.onload = function () {
         },
 
         set_chat : function (x, y) {
-            this.plateau[this.chat.x][this.chat.y].set_apparence("rond.jpg");
-            this.chat = {x: x, y: y};
-            this.plateau[this.chat.x][this.chat.y].set_apparence("chat.png");
+            if (this.plateau[x][y].apparence !== "images/rond2.jpg") {
+                this.plateau[this.chat.x][this.chat.y].set_apparence("rond.jpg");
+                this.chat = {x: x, y: y};
+                this.plateau[this.chat.x][this.chat.y].set_apparence("chat.png");
+                this.dernier_mouvement_reussie = true;
+            } else {
+                print("cases verte");
+                this.dernier_mouvement_reussie = false;
+            }
         },
-
 
         find_move_factor : function (dir) {
             var y = 1;
@@ -127,10 +137,20 @@ window.onload = function () {
             return {"x": x, "y": y};
         },
 
-
         move_chat : function (dir) {
             var mv = this.find_move_factor(dir);
             this.set_chat(this.chat.x + mv.x, this.chat.y + mv.y);
+        },
+
+        try_move : function (liste_dir) {
+            for (var i=0; i<liste_dir.length; i++) {
+                print(liste_dir[i]);
+                var mv_fact = this.find_move_factor(liste_dir[i]);
+                if (this.plateau[this.chat.x + mv_fact.x][this.chat.y + mv_fact.y].apparence !== "images/rond2.jpg") {
+                    this.move_chat(liste_dir[i]);
+                    break;
+                }
+            }
         },
 
         refresh : function () {
@@ -149,104 +169,64 @@ window.onload = function () {
             }
             x = (x - (x % this.largeur_case)) / this.largeur_case;
             return this.plateau[x][y];
-        }
-
-    };
-
-
-    var Ia = {
-
-        refresh : function (plateau) {
-            this.plateau = plateau.plateau;
-            this.chat = plateau.chat;
-            this.direction = hasard_item("hbgd");
         },
 
-        find_move_case : function (dir, chat) {
-            var y = 1;
-            if (dir[0] === "h") {
-                y = -1;
+        modify_direction : function (direction) {
+            if (direction === "h") {
+                var newChat = "h" + hasard_item("gd");
             }
-            if (dir[1] === "g") {
-                var x = -1;
-                if (chat.y % 2 === 0) {
-                    x = 0;
+            if (direction === "b") {
+                var newChat = "b" + hasard_item("gd");
+            }
+            if (direction === "g") {
+                var newChat = hasard_item("hb") + "g";
+            }
+            if (direction === "d") {
+                var newChat = hasard_item("hb") + "d";
+            }
+            return newChat;
+        },
+
+        find_next_frized_case : function (pos) {
+            var rep = {};
+            var liste_dir = ["hg", "hd", "mg", "md", "bg", "bd"];
+            for (var i=0; i<liste_dir.length; i++) {
+                print(liste_dir[i]);
+                var mv_fact = this.find_move_factor(liste_dir[i]);
+                if (this.plateau[pos.x + mv_fact.x][pos.y + mv_fact.y].apparence !== "images/rond2.jpg") {
+                    rep[liste_dir[i]] = {"x": pos.x + mv_fact.x, "y": pos.y + mv_fact.y};
                 }
             }
-            if (dir[1] === "d") {
-                var x = 0;
-                if (chat.y % 2 === 0) {
-                    x = 1;
-                }
-            }
-            if (dir[0] === "m") {
-                y = 0;
-                if (dir[1] === "g") {
-                    x = -1;
-                }
-                if (dir[1] === "d") {
-                    x = 1;
-                }
-            }
-            return {"x": chat.x + x, "y": chat.y + y};
+            return rep;
         },
 
-        find_relative_case : function (dir, num, chat) {
-            for (var i=0; i<num; i++) {
-                chat = this.find_move_case(dir, chat);
-            }
-            return chat;
+        generate_dir_to_try : function () {
+
         },
 
-        find_one_axe : function (dir, chat) {
-            var axe = [];
-            for (var i=0; i<11; i++){
-                axe.push(this.find_relative_case(dir, i, chat));
-            }
-            return axe;
-        },
-
-        find_axes : function (chat) {
-            var axes = {"hg": [], "hd": [], "bg": [], "bd": [], "mg": [], "md": []};
-            for (var dir in axes) {
-                axes[dir] = this.find_one_axe(dir, chat);
-            }
-            return axes;
-        },
-        
         decide : function () {
-            if (this.direction === "h") {
-                var newChat = this.find_move_case("h" + hasard_item("gd"), this.chat);
+            if (!("direction" in this)){
+                this.direction = hasard_item("hbgd");
             }
-            if (this.direction === "b") {
-                var newChat = this.find_move_case("b" + hasard_item("gd"), this.chat);
-            }
-            if (this.direction === "g") {
-                var newChat = this.find_move_case(hasard_item("hb" + "g"), this.chat);
-            }
-            if (this.direction === "d") {
-                var newChat = this.find_move_case(hasard_item("hb") + "d", this.chat);
-            }
-
+            var newDir = this.modify_direction(this.direction);
+            this.try_move([newDir, "hg", "hd", "mg", "md", "bg", "bd"]);
         }
+
     };
 
 
     var a = Object.create(Plateau);
     a.init();
-    var b = Object.create(Ia);
     a.refresh();
-    b.refresh(a);
 
     canvas1.onclick = function () {
         var X = event.clientX;
         var Y = event.clientY;
-        a.onMouse_case(X, Y).set_apparence("rond2.jpg");
-        //print(b.find_axes(b.chat));
-        b.decide();
-        a.refresh();
-        b.refresh(a);
-
+        if (a.onMouse_case(X, Y).apparence === "images/rond.jpg") {
+            a.onMouse_case(X, Y).set_apparence("rond2.jpg");
+            a.decide();
+            a.refresh();
+        }
     }
 
 };
