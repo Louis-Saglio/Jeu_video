@@ -22,6 +22,41 @@ window.onload = function () {
         }
     }
 
+    function random_sort(liste) {
+        var rep = [];
+        var a = liste.length;
+        for (var i=0; i<a; i++){
+            rep.push(liste.splice(hasard(0, liste.length-1), 1));
+        }
+        return rep;
+    }
+
+    function shuffle(a)
+    {
+        var j = 0;
+        var valI = '';
+        var valJ = valI;
+        var l = a.length - 1;
+        while(l > -1)
+        {
+            j = Math.floor(Math.random() * l);
+            valI = a[l];
+            valJ = a[j];
+            a[l] = valJ;
+            a[j] = valI;
+            l = l - 1;
+        }
+        return a;
+    }
+
+    function remove(liste, item) {
+        for (var i in liste){
+            if (i === item){
+
+            }
+        }
+    }
+
     function print(param) {
         console.log(param);
     }
@@ -200,16 +235,34 @@ window.onload = function () {
             return rep;
         },
 
-        generate_dir_to_try : function () {
+        recup_dir : function (dir) {
+            if (dir === "h"){
+                return shuffle(["hg", "hd"]);
+            }
+            if (dir === "b"){
+                return shuffle(["bg", "bd"]);
+            }
+            if (dir === "g"){
+                return shuffle(["bg", "hg"]);
+            }
+            if (dir === "d"){
+                return shuffle(["bd", "hd"]);
+            }
+        },
 
+        generate_dir_to_try : function () {
+            var rep = [];
+            for (var i of this.direction){
+                rep = rep.concat(this.recup_dir(i));
+            }
+            return rep;
         },
 
         decide : function () {
             if (!("direction" in this)){
-                this.direction = hasard_item("hbgd");
+                this.direction = shuffle(["h", "g", "b", "d"]);
             }
-            var newDir = this.modify_direction(this.direction);
-            this.try_move([newDir, "hg", "hd", "mg", "md", "bg", "bd"]);
+            this.try_move(this.generate_dir_to_try());
         }
 
     };
