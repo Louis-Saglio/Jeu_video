@@ -136,7 +136,7 @@ window.onload = function () {
         },
 
         init : function (x, y) {
-            this.apparence = "images/rond.jpg";
+            this.apparence = "images/libre.jpg";
             this.set_place(x, y);
         }
 
@@ -164,8 +164,8 @@ window.onload = function () {
         },
 
         set_chat : function (x, y) {
-            if (this.plateau[x][y].apparence !== "images/rond2.jpg") {
-                this.plateau[this.chat.x][this.chat.y].set_apparence("rond.jpg");
+            if (this.plateau[x][y].apparence !== "images/plein.jpg") {
+                this.plateau[this.chat.x][this.chat.y].set_apparence("libre.jpg");
                 this.chat = {x: x, y: y};
                 this.plateau[this.chat.x][this.chat.y].set_apparence("chat.png");
                 this.historique_chat.push(this.chat);
@@ -209,7 +209,7 @@ window.onload = function () {
         try_move : function (liste_dir) {
             for (var i=0; i<liste_dir.length; i++) {
                 var mv_fact = this.find_move_factor(liste_dir[i]);
-                if (this.plateau[this.chat.x + mv_fact.x][this.chat.y + mv_fact.y].apparence !== "images/rond2.jpg") {
+                if (this.plateau[this.chat.x + mv_fact.x][this.chat.y + mv_fact.y].apparence !== "images/plein.jpg") {
                     this.move_chat(liste_dir[i]);
                     break;
                 }
@@ -283,8 +283,8 @@ window.onload = function () {
     canvas1.onclick = function () {
         var X = event.clientX;
         var Y = event.clientY;
-        if (a.onMouse_case(X, Y).apparence === "images/rond.jpg") {
-            a.onMouse_case(X, Y).set_apparence("rond2.jpg");
+        if (a.onMouse_case(X, Y).apparence === "images/libre.jpg") {
+            a.onMouse_case(X, Y).set_apparence("plein.jpg");
             a.decide();
             a.refresh();
         }

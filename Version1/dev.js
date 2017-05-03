@@ -134,7 +134,7 @@ window.onload = function () {
         // constructeur artificiel en attendant mieux
         init : function (x, y, i) {
             this.id = i;
-            this.apparence = "images/rond.jpg";
+            this.apparence = "images/libre.jpg";
             this.set_place(x, y);
         }
 
@@ -151,11 +151,13 @@ window.onload = function () {
 
         // constructeur créant un tableau à deux dimensions rempli de Case et plaçant le chat sur la position par défaut
         init : function () {
+            var id = 0;
             for (var ligne=0; ligne<this.largeur_plateau; ligne+=1){
                 this.plateau.push([]);
                 for (var colonne=0; colonne<this.largeur_plateau; colonne+=1){
                     var a = Object.create(Case);
-                    a.init(ligne, colonne);
+                    a.init(ligne, colonne, id);
+                    id += 1;
                     this.plateau[ligne].push(a);
                 }
             }
@@ -164,9 +166,9 @@ window.onload = function () {
 
         // gère complètement le déplacement du chat
         set_chat : function (x, y) {
-            if (this.plateau[x][y].apparence !== "images/rond2.jpg") {
+            if (this.plateau[x][y].apparence !== "images/plein.jpg") {
                 // On déplace le chat
-                this.plateau[this.chat.x][this.chat.y].set_apparence("rond.jpg");
+                this.plateau[this.chat.x][this.chat.y].set_apparence("libre.jpg");
                 this.chat = {x: x, y: y};
                 this.plateau[this.chat.x][this.chat.y].set_apparence("chat.png");
             }
@@ -206,14 +208,14 @@ window.onload = function () {
         move_chat : function (dir) {
             var mv = this.find_move_factor(dir);
             this.set_chat(this.chat.x + mv.x, this.chat.y + mv.y);
-            this.historique_chat.push(this.chat);
+            this.historique_chat.push(this.plateau[this.chat.x][this.chat.y].id);
         },
 
         // essaye de déplacer le chat dans la direction données par le premier élément liste_dir, si c'est une case verte, essaye avec le second élément etc.
         try_move : function (liste_dir) {
             for (var i=0; i<liste_dir.length; i++) {
                 var mv_fact = this.find_move_factor(liste_dir[i]);
-                if (this.plateau[this.chat.x + mv_fact.x][this.chat.y + mv_fact.y].apparence !== "images/rond2.jpg") {
+                if (this.plateau[this.chat.x + mv_fact.x][this.chat.y + mv_fact.y].apparence !== "images/plein.jpg") {
                     this.move_chat(liste_dir[i]);
                     break;
                 }
@@ -300,12 +302,8 @@ window.onload = function () {
             var copie = rep;
             // for une_direction in copy:
             for (var direction of copie) {
-                var mv = this.find_move_factor(direction);
-                // if hist contient {"x": chat.x + mv.x , "y": chat.y + mv.y}:
-                if (contains(hist, {"x": this.chat.x + mv.x , "y": this.chat.y + mv.y})) {
-                    console.log('true');
-                    // mettre une direction à la fin de liste_des_directions_à_essayer
-                    rep = move_item(rep, direction, rep.length-1)
+                if (this.plateau[5]){
+
                 }
             }
             return rep;
@@ -328,9 +326,9 @@ window.onload = function () {
         var X = event.clientX;
         var Y = event.clientY;
         console.log('toto');
-        if (a.onMouse_case(X, Y).apparence === "images/rond.jpg") {
+        if (a.onMouse_case(X, Y).apparence === "images/libre.jpg") {
             // si on a clické sur un une case clickable, la case cliqué est grisée
-            a.onMouse_case(X, Y).set_apparence("rond2.jpg");
+            a.onMouse_case(X, Y).set_apparence("plein.jpg");
             // le chat se déplace
             a.decide();
             // on met à jour l'affichage

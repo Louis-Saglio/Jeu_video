@@ -50,7 +50,7 @@ window.onload = function () {
     // Chargement du plateau de jeu
     for (var ligne=0; ligne<largeur*11; ligne+=largeur){
         for (var colonne=0; colonne<largeur*11; colonne+=largeur){
-                charger_image('rond.jpg', ligne, colonne);
+                charger_image('libre.jpg', ligne, colonne);
         }
     }
 
@@ -69,7 +69,7 @@ window.onload = function () {
 
         if ((X !== chat_x || Y !== chat_y) && (contains(cases_vertes, [X, Y]) === false)) {
 
-            charger_image('rond2.jpg', X, Y);
+            charger_image('plein.jpg', X, Y);
             cases_vertes.push([X, Y]);
 
             var chat_new_x = chat_x;
@@ -91,7 +91,7 @@ window.onload = function () {
 
             // si la cases où le chat veut aller n'est pas vertes
             if (contains(cases_vertes, [chat_new_x, chat_new_y]) === false){
-                charger_image('rond.jpg', chat_x, chat_y);
+                charger_image('libre.jpg', chat_x, chat_y);
                 charger_image('chat.png', chat_new_x, chat_new_y);
                 chat_x = chat_new_x;
                 chat_y = chat_new_y;
@@ -109,7 +109,7 @@ window.onload = function () {
                     var coords = getRandomItem(cases_possibles);
                     chat_new_x = coords[0];
                     chat_new_y = coords[1];
-                    charger_image('rond.jpg', chat_x, chat_y);
+                    charger_image('libre.jpg', chat_x, chat_y);
                     charger_image('chat.png', chat_new_x, chat_new_y);
                     chat_x = chat_new_x;
                     chat_y = chat_new_y;
