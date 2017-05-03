@@ -29,7 +29,7 @@ window.onload = function () {
 
     function contains(liste, item) {
         for (var i=0; i<liste.length; i++){
-            if (liste[i][0] == item[0] && liste[i][1] == item[1]){
+            if (liste[i][0] === item[0] && liste[i][1] === item[1]){
                 return true;
             }
         }
@@ -67,7 +67,7 @@ window.onload = function () {
         var X = event.clientX - event.clientX % largeur;
         var Y = event.clientY - event.clientY % largeur;
 
-        if ((X != chat_x || Y != chat_y) && (contains(cases_vertes, [X, Y]) == false)) {
+        if ((X !== chat_x || Y !== chat_y) && (contains(cases_vertes, [X, Y]) === false)) {
 
             charger_image('rond2.jpg', X, Y);
             cases_vertes.push([X, Y]);
@@ -90,7 +90,7 @@ window.onload = function () {
             }
 
             // si la cases où le chat veut aller n'est pas vertes
-            if (contains(cases_vertes, [chat_new_x, chat_new_y]) == false){
+            if (contains(cases_vertes, [chat_new_x, chat_new_y]) === false){
                 charger_image('rond.jpg', chat_x, chat_y);
                 charger_image('chat.png', chat_new_x, chat_new_y);
                 chat_x = chat_new_x;
@@ -101,7 +101,7 @@ window.onload = function () {
                 var cases_possibles = [];
                 var cases_dispo = [[chat_x+largeur, chat_y+largeur], [chat_x+largeur, chat_y-largeur], [chat_x-largeur, chat_y+largeur], [chat_x-largeur, chat_y-largeur],  [chat_x, chat_y-largeur], [chat_x, chat_y+largeur], [chat_x+largeur, chat_y], [chat_x-largeur, chat_y]];
                 for (var i=0; i<cases_dispo.length; i++) {
-                    if (contains(cases_vertes, cases_dispo[i]) == false) {
+                    if (contains(cases_vertes, cases_dispo[i]) === false) {
                         cases_possibles.push([cases_dispo[i][0], cases_dispo[i][1]]);
                     }
                 }

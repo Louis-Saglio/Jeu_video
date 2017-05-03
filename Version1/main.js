@@ -50,11 +50,42 @@ window.onload = function () {
     }
 
     function remove(liste, item) {
-        for (var i in liste){
-            if (i === item){
-
+        var rep = [];
+        for (var i=0; i<liste.length; i++) {
+            if (liste[i] === item) {
+                delete liste[i];
             }
         }
+        for (var i=0; i<liste.length; i++) {
+            if (liste[i] !== (undefined)){
+                rep.push(liste[i]);
+            }
+        }
+        return rep;
+    }
+
+    function move_item(liste, item, place) {
+        remove(liste, item);
+        var a = [];
+        var c = [];
+        for (var i=0; i<place; i++) {
+            a.push(liste[i]);
+
+        }
+        for (var i=place; i<liste.length; i++) {
+            c.push(liste[i]);
+        }
+        var b = [item];
+        return remove((a.concat(b)).concat(c), undefined);
+    }
+
+    function contains(liste, item) {
+        for (var i=0; i<liste.length; i++){
+            if (liste[i] === item){
+                return true;
+            }
+        }
+        return false;
     }
 
     function print(param) {
@@ -118,6 +149,7 @@ window.onload = function () {
         largeur_plateau : 11,
         plateau : [],
         chat : {x: 7, y: 3},
+        historique_chat : [],
 
         init : function () {
             for (var ligne=0; ligne<this.largeur_plateau; ligne+=1){
@@ -136,10 +168,7 @@ window.onload = function () {
                 this.plateau[this.chat.x][this.chat.y].set_apparence("rond.jpg");
                 this.chat = {x: x, y: y};
                 this.plateau[this.chat.x][this.chat.y].set_apparence("chat.png");
-                this.dernier_mouvement_reussie = true;
-            } else {
-                print("cases verte");
-                this.dernier_mouvement_reussie = false;
+                this.historique_chat.push(this.chat);
             }
         },
 
@@ -179,7 +208,6 @@ window.onload = function () {
 
         try_move : function (liste_dir) {
             for (var i=0; i<liste_dir.length; i++) {
-                print(liste_dir[i]);
                 var mv_fact = this.find_move_factor(liste_dir[i]);
                 if (this.plateau[this.chat.x + mv_fact.x][this.chat.y + mv_fact.y].apparence !== "images/rond2.jpg") {
                     this.move_chat(liste_dir[i]);
@@ -206,35 +234,6 @@ window.onload = function () {
             return this.plateau[x][y];
         },
 
-        modify_direction : function (direction) {
-            if (direction === "h") {
-                var newChat = "h" + hasard_item("gd");
-            }
-            if (direction === "b") {
-                var newChat = "b" + hasard_item("gd");
-            }
-            if (direction === "g") {
-                var newChat = hasard_item("hb") + "g";
-            }
-            if (direction === "d") {
-                var newChat = hasard_item("hb") + "d";
-            }
-            return newChat;
-        },
-
-        find_next_frized_case : function (pos) {
-            var rep = {};
-            var liste_dir = ["hg", "hd", "mg", "md", "bg", "bd"];
-            for (var i=0; i<liste_dir.length; i++) {
-                print(liste_dir[i]);
-                var mv_fact = this.find_move_factor(liste_dir[i]);
-                if (this.plateau[pos.x + mv_fact.x][pos.y + mv_fact.y].apparence !== "images/rond2.jpg") {
-                    rep[liste_dir[i]] = {"x": pos.x + mv_fact.x, "y": pos.y + mv_fact.y};
-                }
-            }
-            return rep;
-        },
-
         recup_dir : function (dir) {
             if (dir === "h"){
                 return shuffle(["hg", "hd"]);
@@ -251,17 +250,26 @@ window.onload = function () {
         },
 
         generate_dir_to_try : function () {
+            if (!("direction" in this)){
+                this.direction = shuffle(["h", "g", "b", "d"]);
+            }
             var rep = [];
             for (var i of this.direction){
                 rep = rep.concat(this.recup_dir(i));
             }
-            return rep;
+            var rep1 = rep;
+            console.log(this.historique_chat);
+            for (var dir of rep){
+                var dir2 = {"x": this.chat.x + this.find_move_factor(dir).x, "y": this.chat.y + this.find_move_factor(dir).y};
+                if (contains([this.historique_chat[0], this.historique_chat[1], this.historique_chat[2]], dir2)){
+                    console.log("e");
+                    var rep1 = move_item(rep1, dir, rep.length - 1)
+                }
+            }
+            return rep1;
         },
 
         decide : function () {
-            if (!("direction" in this)){
-                this.direction = shuffle(["h", "g", "b", "d"]);
-            }
             this.try_move(this.generate_dir_to_try());
         }
 
