@@ -30,16 +30,16 @@ window.onload = function () {
         if (dir === "d") return shuffle(["bd", "hd", "md"]);
     }
 
-    function numerise_dir (dir){
+    function numerise_dir (dir, une_case){
         var y = 1;
         if (dir[0] === "h") y = -1;
         if (dir[1] === "g") {
             var x = -1;
-            if (this.chat.y % 2 === 0) x = 0;
+            if (une_case.place.y % 2 === 0) x = 0;
         }
         if (dir[1] === "d") {
             var x = 0;
-            if (this.chat.y % 2 === 0) x = 1;
+            if (une_case.place.y % 2 === 0) x = 1;
         }
         if (dir[0] === "m") {
             y = 0;
@@ -60,6 +60,7 @@ window.onload = function () {
             this.set_place(x, y);
             this.set_etat("libre");
             this.nbr_passage = 0;
+            this.move_factor = 0;
         }
 
         set_coord() {
@@ -103,24 +104,16 @@ window.onload = function () {
             image.onload = function () {
                 canvas.drawImage(image, x, y);
                 // Outil de debug :
-                // canvas.beginPath();
-                // canvas.fillStyle = "#FF0000";
-                // canvas.fillText(self.etat,x + 25 ,y + 25);
-                // canvas.closePath();
+                canvas.beginPath();
+                canvas.fillStyle = "#FF0000";
+                canvas.fillText(self.move_factor,x + 25 ,y + 25);
+                canvas.closePath();
 
             };
         }
 
-        get_coord_cases_environnantes () {
-            var cases_environnantes = {};
-            var dirs = ["hg", "bg", "mg", "hd", "bd", "md"];
-            for (var direction of dirs){
-                var position_increments = numerise_dir(direction);
-                cases_environnantes[direction] = {
-                    "x": position_increments.x + this.place.x,
-                    "y": position_increments.y + this.place.y
-                };
-            }
+        get_next_case (dir) {
+            return numerise_dir(dir, this.place);
         }
 
     }
@@ -130,7 +123,6 @@ window.onload = function () {
         constructor() {
             this.largeur_case = 50;
             this.largeur_plateau = 11;
-            this.chat = {x: 5, y: 6};
             this.plateau = [];
 
             var id = 0;
@@ -142,16 +134,16 @@ window.onload = function () {
                     this.plateau[ligne].push(ma_case);
                 }
             }
-            this.set_chat(this.plateau[this.chat.x][this.chat.y]);
+            this.chat = this.plateau[5][5];
+            this.set_chat(this.chat);
         }
 
         set_chat (new_case) {
-            this.plateau[this.chat.x][this.chat.y].set_etat("libre");
-            this.plateau[this.chat.x][this.chat.y].show();
-            this.chat.x = new_case.place.x;
-            this.chat.y = new_case.place.y;
-            this.plateau[this.chat.x][this.chat.y].set_etat("chat");
-            this.plateau[this.chat.x][this.chat.y].show();
+            this.chat.set_etat("libre");
+            this.chat.show();
+            this.chat.set_place(new_case.place.x, new_case.place.y);
+            this.chat.set_etat("chat");
+            this.chat.show();
         }
 
         onMouse_case (x, y) {
@@ -172,8 +164,8 @@ window.onload = function () {
         }
 
         find_case_by_dir (dir){
-            var position_increments = numerise_dir(dir);
-            return this.plateau[position_increments.x + this.chat.x][position_increments.y + this.chat.y]
+            var position_increments = numerise_dir(dir, this.chat);
+            return this.plateau[position_increments.x + this.chat.place.x][position_increments.y + this.chat.place.y]
         }
 
         move_chat (dir){
@@ -183,32 +175,56 @@ window.onload = function () {
 
     class IA {
 
-        constructor (plateau) {
+        constructor (plateau){
+            this.pere = plateau;
             this.plateau = plateau.plateau;
-            this.chat = plateau[plateau.chat.x][plateau.chat.y];
-            this.directions = [
-                convert_quadra_dir_to_hexa_dir('h'),
-                convert_quadra_dir_to_hexa_dir('b'),
-                convert_quadra_dir_to_hexa_dir('d'),
-                convert_quadra_dir_to_hexa_dir('g')
-            ];
-            this.directions = shuffle(this.directions);
-            this.cases_environnant_chat = this.get_cases_environnant_chat();
+            this.directions = ["hg", "bg", "mg", "hd", "bd", "md"];
+            this.dir = shuffle(this.directions)[0];
         }
 
-        get_cases_environnant_chat () {
-            var cases_environnantes = {};
-            var coords = this.chat.get_coord_cases_environnantes();
-            for (var dir in coords){
-                cases_environnantes[dir] = this.plateau[coords[dir].x][coords[dir].y];
-            }
-            return cases_environnantes;
+        get_chat (){
+            return this.pere.chat;
         }
+
+        random (){
+            for (var dir of this.directions){
+                this.pere.find_case_by_dir(dir).move_factor += Math.round(Math.random() * 10);
+            };
+        }
+
+        good_dir (){
+            for (var dir of this.directions){
+                if (dir === this.dir){
+                    this.pere.find_case_by_dir(dir).move_factor += Math.round(Math.random() * 10);
+                }
+            };
+        }
+
+        not_plein (){
+            for (var dir of this.directions){
+                if (this.pere.find_case_by_dir(dir).etat === "plein") {
+                    this.pere.find_case_by_dir(dir).move_factor = 0;
+                };
+            };
+        }
+
+        decide (){
+            var dir_retenue = this.dir;
+            this.random();
+            this.good_dir();
+            this.not_plein();
+            for (var dir of this.directions){
+                if (this.pere.find_case_by_dir(dir).move_factor > this.pere.find_case_by_dir(dir_retenue).move_factor){
+                    dir_retenue = dir;
+                };
+            };
+            console.log(this.pere.find_case_by_dir(dir));
+            this.pere.move_chat(dir_retenue);
+        }
+
     }
 
     var a = new Plateau();
-    console.log(a.plateau);
-    console.log(a.chat.x, a.chat.y);
     var ia = new IA(a);
 
     canvas1.onclick = function (event) {
@@ -217,7 +233,7 @@ window.onload = function () {
         var Y = event.clientY;
         var case_cliquee = a.onMouse_case(X, Y);
         if (case_cliquee.etat === "libre"){
-            a.move_chat("hg");
+            ia.decide();
             case_cliquee.set_etat("plein");
         }
     }
