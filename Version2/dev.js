@@ -4,9 +4,13 @@
 
 window.onload = function () {
 
-    function shuffle(a)
+    function shuffle(b)
     // mélange aléatoirement une liste
     {
+        var a = [];
+        for (var e in b){
+            a.push(e);
+        }
         var j = 0;
         var valI = '';
         var valJ = valI;
@@ -47,6 +51,22 @@ window.onload = function () {
             if (dir[1] === "d") x = 1;
         }
         return {"x": x, "y": y};
+    }
+
+    function find_object_max_value (obj){
+        for (var key in obj){
+            var value = obj[key];
+            var clef = key;
+            break;
+        };
+        for (var key in obj){
+            if (obj[key] > value) {
+                value = obj[key];
+                clef = key;
+            }
+            console.log(key, obj[key]);
+        };
+        return clef;
     }
 
     var canvas1 = document.getElementById("canvas");
@@ -178,7 +198,7 @@ window.onload = function () {
         constructor (plateau){
             this.pere = plateau;
             this.plateau = plateau.plateau;
-            this.directions = ["hg", "bg", "mg", "hd", "bd", "md"];
+            this.directions = {"hg": 0, "bg": 0, "mg": 0, "hd": 0, "bd": 0, "md": 0};
             this.dir = shuffle(this.directions)[0];
         }
 
@@ -187,39 +207,35 @@ window.onload = function () {
         }
 
         random (){
-            for (var dir of this.directions){
-                this.pere.find_case_by_dir(dir).move_factor += Math.round(Math.random() * 10);
+            for (var dir in this.directions){
+                this.directions[dir] += Math.round(Math.random() * 9)+1;
             };
         }
 
         good_dir (){
-            for (var dir of this.directions){
+            for (var dir in this.directions){
                 if (dir === this.dir){
-                    this.pere.find_case_by_dir(dir).move_factor += Math.round(Math.random() * 10);
+                    this.directions[dir] += Math.round(Math.random() * 9)+1;
                 }
             };
         }
 
         not_plein (){
-            for (var dir of this.directions){
+            for (var dir in this.directions){
                 if (this.pere.find_case_by_dir(dir).etat === "plein") {
-                    this.pere.find_case_by_dir(dir).move_factor = 0;
+                    this.directions[dir] = 0;
                 };
             };
         }
 
         decide (){
-            var dir_retenue = this.dir;
+            this.directions = {"hg": 0, "bg": 0, "mg": 0, "hd": 0, "bd": 0, "md": 0};
             this.random();
             this.good_dir();
             this.not_plein();
-            for (var dir of this.directions){
-                if (this.pere.find_case_by_dir(dir).move_factor > this.pere.find_case_by_dir(dir_retenue).move_factor){
-                    dir_retenue = dir;
-                };
-            };
-            console.log(this.pere.find_case_by_dir(dir));
+            var dir_retenue = find_object_max_value(this.directions);
             this.pere.move_chat(dir_retenue);
+            console.log(dir_retenue);
         }
 
     }
@@ -233,8 +249,9 @@ window.onload = function () {
         var Y = event.clientY;
         var case_cliquee = a.onMouse_case(X, Y);
         if (case_cliquee.etat === "libre"){
-            ia.decide();
             case_cliquee.set_etat("plein");
+            ia.decide();
+            a.show;
         }
     }
 };

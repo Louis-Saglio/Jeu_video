@@ -22,3 +22,23 @@ class IA {
         return cases_environnantes;
     }
 }
+
+function find_object_max_value (obj){
+    for (var key in obj){
+        var value = obj[key];
+        var clef = key;
+        break;
+    };
+    for (var key in obj){
+        console.log(key, obj[key]);
+        if (obj[key] > value) {
+            value = obj[key];
+            clef = key;
+            console.log("key", key);
+        }
+    };
+    return clef;
+};
+
+
+console.log(find_object_max_value({"hg": 0, "bg": 0, "mg": 0, "hd": 0, "bd": 1, "md": 0}));
