@@ -64,9 +64,16 @@ window.onload = function () {
                 value = obj[key];
                 clef = key;
             }
-            console.log(key, obj[key]);
         };
         return clef;
+    }
+
+    function declare_victory (){
+        console.log("Victoire !");
+    }
+
+    function rand(fct) {
+        return Math.round(Math.random() * fct) + 1;
     }
 
     var canvas1 = document.getElementById("canvas");
@@ -124,16 +131,19 @@ window.onload = function () {
             image.onload = function () {
                 canvas.drawImage(image, x, y);
                 // Outil de debug :
-                canvas.beginPath();
-                canvas.fillStyle = "#FF0000";
-                canvas.fillText(self.move_factor,x + 25 ,y + 25);
-                canvas.closePath();
+                // canvas.beginPath();
+                // canvas.fillStyle = "#FF0000";
+                // canvas.fillText(self.id,x + 25 ,y + 25);
+                // canvas.closePath();
 
             };
         }
 
-        get_next_case (dir) {
-            return numerise_dir(dir, this.place);
+        is_border (){
+            if (this.id % 11 === 0 || this.id % 11 === 10 || this.id < 11 || (this.id < 121 && this.id > 109)){
+                return true;
+            }
+            else { return false };
         }
 
     }
@@ -161,7 +171,7 @@ window.onload = function () {
         set_chat (new_case) {
             this.chat.set_etat("libre");
             this.chat.show();
-            this.chat.set_place(new_case.place.x, new_case.place.y);
+            this.chat = this.plateau[new_case.place.x][new_case.place.y];
             this.chat.set_etat("chat");
             this.chat.show();
         }
@@ -202,20 +212,39 @@ window.onload = function () {
             this.dir = shuffle(this.directions)[0];
         }
 
-        get_chat (){
-            return this.pere.chat;
+        convert_negatives (){
+            for (var dir in this.directions){
+                if (this.directions[dir] < 0){
+                    this.directions[dir] = 0.5;
+                }
+            };
         }
 
         random (){
             for (var dir in this.directions){
-                this.directions[dir] += Math.round(Math.random() * 9)+1;
+                this.directions[dir] += rand(9);
             };
         }
 
         good_dir (){
             for (var dir in this.directions){
                 if (dir === this.dir){
-                    this.directions[dir] += Math.round(Math.random() * 9)+1;
+                    this.directions[dir] += rand(9);
+                }
+            };
+        }
+
+        nbr_passage (){
+            for (var dir in this.directions){
+                this.directions[dir] -= rand(this.pere.find_case_by_dir(dir).nbr_passage * 2);
+                this.convert_negatives();
+            };
+        }
+
+        go_to_border (){
+            for (var dir in this.directions){
+                if (this.pere.find_case_by_dir(dir).is_border()){
+                    this.directions[dir] += 100;
                 }
             };
         }
@@ -228,14 +257,30 @@ window.onload = function () {
             };
         }
 
+        verifie_victory (){
+            if (find_object_max_value(this.directions) === 0) {
+                console.log("Victoire debug");
+                declare_victory();
+            }
+        }
+
         decide (){
             this.directions = {"hg": 0, "bg": 0, "mg": 0, "hd": 0, "bd": 0, "md": 0};
             this.random();
             this.good_dir();
+            this.nbr_passage();
+            this.go_to_border();
             this.not_plein();
+            this.verifie_victory();
             var dir_retenue = find_object_max_value(this.directions);
+            this.debug();
             this.pere.move_chat(dir_retenue);
-            console.log(dir_retenue);
+        }
+
+        debug (){
+            for (var dir in this.directions) {
+                console.log(dir, this.directions[dir]);
+            }
         }
 
     }
@@ -251,7 +296,6 @@ window.onload = function () {
         if (case_cliquee.etat === "libre"){
             case_cliquee.set_etat("plein");
             ia.decide();
-            a.show;
         }
     }
 };
