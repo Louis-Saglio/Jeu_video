@@ -27,11 +27,13 @@ window.onload = function () {
         return a;
     }
 
-    function convert_quadra_dir_to_hexa_dir (dir) {
-        if (dir === "h") return shuffle(["hg", "hd"]);
-        if (dir === "b") return shuffle(["bg", "bd"]);
-        if (dir === "g") return shuffle(["bg", "hg", "mg"]);
-        if (dir === "d") return shuffle(["bd", "hd", "md"]);
+    function find_alter_dir(dir) {
+        if (dir === "hg") return ["mg", "hd"];
+        if (dir === "hd") return ["md", "hg"];
+        if (dir === "bg") return ["mg", "bd"];
+        if (dir === "bd") return ["bg", "md"];
+        if (dir === "mg") return ["hg", "bg"];
+        if (dir === "md") return ["hd", "bd"];
     }
 
     function numerise_dir (dir, une_case){
@@ -69,11 +71,24 @@ window.onload = function () {
     }
 
     function declare_victory (){
-        console.log("Victoire !");
+        alert("Victoire !");
     }
 
     function rand(fct) {
-        return Math.round(Math.random() * fct) + 1;
+        return (Math.random() * (fct-1)) + 1;
+    }
+
+    function arrondir(nbr){
+        return Math.round(nbr * 1000) / 1000;
+    }
+
+    function opposite_dir(dir) {
+        if (dir === "hg") return "bd";
+        if (dir === "hd") return "bg";
+        if (dir === "bg") return "hd";
+        if (dir === "bd") return "hg";
+        if (dir === "mg") return "md";
+        if (dir === "md") return "mg";
     }
 
     var canvas1 = document.getElementById("canvas");
@@ -81,9 +96,10 @@ window.onload = function () {
 
     class Case {
 
-        constructor(x, y, id, image, largeur) {
+        constructor(x, y, id, pere) {
+            this.pere = pere;
             this.id = id;
-            this.largeur = largeur;
+            this.largeur = pere.largeur_case;
             this.set_place(x, y);
             this.set_etat("libre");
             this.nbr_passage = 0;
@@ -135,7 +151,22 @@ window.onload = function () {
                 // canvas.fillStyle = "#FF0000";
                 // canvas.fillText(self.id,x + 25 ,y + 25);
                 // canvas.closePath();
+            };
+        }
 
+        print_in (message){
+            var self = this;
+            var image = new Image();
+            image.src = this.get_image() + "?t=" + Math.random();
+            var x = this.coord.x;
+            var y = this.coord.y;
+            image.onload = function () {
+                canvas.drawImage(image, x, y);
+                // Outil de debug :
+                canvas.beginPath();
+                canvas.fillStyle = "#FF0000";
+                canvas.fillText(message, x + 15 , y + 25);
+                canvas.closePath();
             };
         }
 
@@ -146,6 +177,24 @@ window.onload = function () {
             else { return false };
         }
 
+        find_case_by_dir (dir){
+            var position_increments = numerise_dir(dir, this);
+            return this.pere.plateau[position_increments.x + this.place.x][position_increments.y + this.place.y]
+        }
+
+        get_surrounding_cliked_case_number (){
+            var number = 0;
+            for (var dir in this.pere.directions){
+                try{
+                    if (this.find_case_by_dir(dir).etat === "plein") { number += 1 }
+                }
+                catch (e){
+                    // number += 0;
+                }
+            }
+            return number;
+        }
+
     }
 
     class Plateau {
@@ -154,12 +203,13 @@ window.onload = function () {
             this.largeur_case = 50;
             this.largeur_plateau = 11;
             this.plateau = [];
+            this.directions = {"hg": 0, "bg": 0, "mg": 0, "hd": 0, "bd": 0, "md": 0};
 
             var id = 0;
             for (var ligne=0; ligne<this.largeur_plateau; ligne+=1){
                 this.plateau.push([]);
                 for (var colonne=0; colonne<this.largeur_plateau; colonne+=1){
-                    var ma_case = new Case(ligne, colonne, id, "rond", this.largeur_case);
+                    var ma_case = new Case(ligne, colonne, id, this);
                     id += 1;
                     this.plateau[ligne].push(ma_case);
                 }
@@ -189,26 +239,22 @@ window.onload = function () {
         show (){
             for (var ligne=0; ligne<this.largeur_plateau; ligne+=1){
                 for (var colonne=0; colonne<this.largeur_plateau; colonne+=1)
-                    this.plateau[ligne][colonne].show();
+                    this.plateau[ligne][colonne].debug();
             }
         }
 
-        find_case_by_dir (dir){
-            var position_increments = numerise_dir(dir, this.chat);
-            return this.plateau[position_increments.x + this.chat.place.x][position_increments.y + this.chat.place.y]
-        }
-
         move_chat (dir){
-            this.set_chat(this.find_case_by_dir(dir));
+            this.set_chat(this.chat.find_case_by_dir(dir));
         }
     }
 
     class IA {
 
         constructor (plateau){
+            this.nbr_coup = 0;
             this.pere = plateau;
             this.plateau = plateau.plateau;
-            this.directions = {"hg": 0, "bg": 0, "mg": 0, "hd": 0, "bd": 0, "md": 0};
+            this.directions = this.pere.directions;
             this.dir = shuffle(this.directions)[0];
         }
 
@@ -222,7 +268,7 @@ window.onload = function () {
 
         random (){
             for (var dir in this.directions){
-                this.directions[dir] += rand(9);
+                this.directions[dir] += rand(4);
             };
         }
 
@@ -236,14 +282,27 @@ window.onload = function () {
 
         nbr_passage (){
             for (var dir in this.directions){
-                this.directions[dir] -= rand(this.pere.find_case_by_dir(dir).nbr_passage * 2);
-                this.convert_negatives();
+                this.directions[dir] -= rand(this.pere.chat.find_case_by_dir(dir).nbr_passage * 5);
             };
+        }
+
+        surrounded_by_three(){
+            for (var dir in this.directions){
+                if (this.pere.chat.find_case_by_dir(dir).get_surrounding_cliked_case_number() > 2){
+                    this.directions[dir] -= rand(9);
+                }
+            }
+        }
+
+        near_good_direction(){
+            console.log(this.dir);
+            this.directions[find_alter_dir(this.dir)[0]] += rand(7);
+            this.directions[find_alter_dir(this.dir)[1]] += rand(7);
         }
 
         go_to_border (){
             for (var dir in this.directions){
-                if (this.pere.find_case_by_dir(dir).is_border()){
+                if (this.pere.chat.find_case_by_dir(dir).is_border()){
                     this.directions[dir] += 100;
                 }
             };
@@ -251,35 +310,51 @@ window.onload = function () {
 
         not_plein (){
             for (var dir in this.directions){
-                if (this.pere.find_case_by_dir(dir).etat === "plein") {
+                if (this.pere.chat.find_case_by_dir(dir).etat === "plein") {
                     this.directions[dir] = 0;
                 };
             };
         }
 
+        change_main_dir (){
+            // Voir si la direction a déjà été utilisée
+            var dir1 = find_alter_dir(this.dir)[0];
+            var dir2 = find_alter_dir(this.dir)[1];
+            console.log("entoure chat", this.pere.chat.get_surrounding_cliked_case_number());
+            console.log(dir1, this.pere.chat.find_case_by_dir(dir1).get_surrounding_cliked_case_number());
+            console.log(dir2, this.pere.chat.find_case_by_dir(dir2).get_surrounding_cliked_case_number());
+            if (this.pere.chat.get_surrounding_cliked_case_number() >= 3 && this.pere.chat.find_case_by_dir(dir1).get_surrounding_cliked_case_number() >= 2 && this.pere.chat.find_case_by_dir(dir2).get_surrounding_cliked_case_number() >= 2){
+                console.log("on change de dir");
+                this.dir = find_alter_dir(opposite_dir(this.dir))[Math.round(Math.random()*2)];
+            }
+        }
+
         verifie_victory (){
             if (find_object_max_value(this.directions) === 0) {
-                console.log("Victoire debug");
                 declare_victory();
             }
         }
 
         decide (){
             this.directions = {"hg": 0, "bg": 0, "mg": 0, "hd": 0, "bd": 0, "md": 0};
+            this.change_main_dir();
             this.random();
             this.good_dir();
             this.nbr_passage();
+            this.near_good_direction();
+            this.surrounded_by_three();
             this.go_to_border();
             this.not_plein();
+            this.convert_negatives();
             this.verifie_victory();
             var dir_retenue = find_object_max_value(this.directions);
-            this.debug();
+            //this.debug();
             this.pere.move_chat(dir_retenue);
         }
 
         debug (){
             for (var dir in this.directions) {
-                console.log(dir, this.directions[dir]);
+                this.pere.chat.find_case_by_dir(dir).print_in(arrondir(this.directions[dir]));
             }
         }
 
@@ -296,6 +371,8 @@ window.onload = function () {
         if (case_cliquee.etat === "libre"){
             case_cliquee.set_etat("plein");
             ia.decide();
+            ia.nbr_coup += 1;
+            //a.show();
         }
     }
 };
