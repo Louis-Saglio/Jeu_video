@@ -255,7 +255,13 @@ window.onload = function () {
             this.pere = plateau;
             this.plateau = plateau.plateau;
             this.directions = this.pere.directions;
-            this.dir = shuffle(this.directions)[0];
+            this.hist_dir = [];
+            this.set_dir(shuffle(this.directions)[0]);
+        }
+
+        set_dir (new_dir){
+            this.hist_dir.push(this.dir)
+            this.dir = new_dir;
         }
 
         convert_negatives (){
@@ -300,6 +306,10 @@ window.onload = function () {
             this.directions[find_alter_dir(this.dir)[1]] += rand(7);
         }
 
+        near_border(){
+
+        }
+
         go_to_border (){
             for (var dir in this.directions){
                 if (this.pere.chat.find_case_by_dir(dir).is_border()){
@@ -325,6 +335,14 @@ window.onload = function () {
             console.log(dir2, this.pere.chat.find_case_by_dir(dir2).get_surrounding_cliked_case_number());
             if (this.pere.chat.get_surrounding_cliked_case_number() >= 3 && this.pere.chat.find_case_by_dir(dir1).get_surrounding_cliked_case_number() >= 2 && this.pere.chat.find_case_by_dir(dir2).get_surrounding_cliked_case_number() >= 2){
                 console.log("on change de dir");
+                console.log("dir actuelle :", this.dir);
+                console.log("opposite", opposite_dir(this.dir));
+                console.log("index", Math.round(Math.random()*2));
+                console.log("partiel", find_alter_dir(opposite_dir(this.dir)));
+                console.log("total", find_alter_dir(opposite_dir(this.dir))[Math.round(Math.random()*2)]);
+                if (this.hist_dir.indexOf(find_alter_dir(opposite_dir(this.dir))[0]) != undefined){
+                    this.dir = find_alter_dir(opposite_dir(this.dir))[0]
+                }
                 this.dir = find_alter_dir(opposite_dir(this.dir))[Math.round(Math.random()*2)];
             }
         }
