@@ -105,12 +105,10 @@ window.onload = function () {
         return nbr;
     }
 
-    var canvas1 = document.getElementById("canvas");
-    var canvas = canvas1.getContext("2d");
-
     class Case {
 
-        constructor(x, y, id, pere) {
+        constructor(x, y, id, pere, context) {
+            this.context = context
             this.pere = pere;
             this.id = id;
             this.largeur = pere.largeur_case;
@@ -166,28 +164,12 @@ window.onload = function () {
             var x = this.coord.x;
             var y = this.coord.y;
             image.onload = function () {
-                canvas.drawImage(image, x, y);
+                self.context.drawImage(image, x, y);
                 // Outil de debug :
                 // canvas.beginPath();
                 // canvas.fillStyle = "#FF0000";
                 // canvas.fillText(self.id,x + 25 ,y + 25);
                 // canvas.closePath();
-            };
-        }
-
-        print_in (message){
-            var self = this;
-            var image = new Image();
-            image.src = this.get_image() + "?t=" + Math.random();
-            var x = this.coord.x;
-            var y = this.coord.y;
-            image.onload = function () {
-                canvas.drawImage(image, x, y);
-                // Outil de debug :
-                canvas.beginPath();
-                canvas.fillStyle = "#FF0000";
-                canvas.fillText(message, x + 15 , y + 25);
-                canvas.closePath();
             };
         }
 
@@ -220,7 +202,9 @@ window.onload = function () {
 
     class Plateau {
 
-        constructor() {
+        constructor(canvas) {
+            this.canvas = canvas;
+            this.context = this.canvas.getContext("2d");
             this.nbr_coup = 0;
             this.largeur_case = 50;
             this.largeur_plateau = 11;
@@ -231,7 +215,7 @@ window.onload = function () {
             for (var ligne=0; ligne<this.largeur_plateau; ligne+=1){
                 this.plateau.push([]);
                 for (var colonne=0; colonne<this.largeur_plateau; colonne+=1){
-                    var ma_case = new Case(ligne, colonne, id, this);
+                    var ma_case = new Case(ligne, colonne, id, this, this.context);
                     id += 1;
                     this.plateau[ligne].push(ma_case);
                 }
@@ -256,14 +240,6 @@ window.onload = function () {
             }
             x = (x - (x % this.largeur_case)) / this.largeur_case;
             return this.plateau[x][y];
-        }
-
-        // Vérifier l'utilisation de cette fonction à la fin du developpement et éventuellement la supprimer
-        show (message){
-            for (var ligne=0; ligne<this.largeur_plateau; ligne+=1){
-                for (var colonne=0; colonne<this.largeur_plateau; colonne+=1)
-                    this.plateau[ligne][colonne].print_in(message);
-            }
         }
 
         move_chat (dir){
@@ -390,33 +366,36 @@ window.onload = function () {
             this.not_plein();
             this.dir_retenue = find_object_max_value(this.directions);
             this.manage_dir();
-            this.debug();
             this.check_victory_or_deafet();
             return this.dir_retenue;
         }
 
-        debug (){
-            for (var dir in this.directions) {
-                this.pere.chat.find_case_by_dir(dir).print_in(arrondir(this.directions[dir]));
+    }
+
+    class Game_manager {
+
+        constructor(){
+            this.canvas = document.getElementById("canvas")
+            this.plateau = new Plateau(this.canvas);
+            this.ia = new IA(this.plateau);
+        }
+
+        play(){
+            var self = this;
+            this.canvas.onclick = function (event) {
+                var x = event.clientX;
+                var y = event.clientY;
+                var case_cliquee = self.plateau.onMouse_case(x, y);
+                if (case_cliquee.etat === "libre"){
+                    self.plateau.nbr_coup += 1;
+                    case_cliquee.set_etat("plein");
+                    self.plateau.move_chat(self.ia.decide());
+                }
             }
         }
 
     }
 
-    var a = new Plateau();
-    var ia = new IA(a);
-
-    canvas1.onclick = function (event) {
-        // récupération des coordonnées de la souris
-        var X = event.clientX;
-        var Y = event.clientY;
-        var case_cliquee = a.onMouse_case(X, Y);
-        if (case_cliquee.etat === "libre"){
-            a.nbr_coup += 1;
-            case_cliquee.set_etat("plein");
-            a.move_chat(ia.decide());
-            console.log(ia.directions[ia.dir_retenue]);
-            //a.show();
-        }
-    }
+    var manager = new Game_manager();
+    manager.play();
 };
