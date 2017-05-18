@@ -203,7 +203,7 @@ window.onload = function () {
             return this.pere.plateau[position_increments.x + this.place.x][position_increments.y + this.place.y]
         }
 
-        get_surrounding_cliked_case_number (){
+        get_cliked_nbr (){
             var number = 0;
             for (var dir in this.pere.directions){
                 try{
@@ -221,6 +221,7 @@ window.onload = function () {
     class Plateau {
 
         constructor() {
+            this.nbr_coup = 0;
             this.largeur_case = 50;
             this.largeur_plateau = 11;
             this.plateau = [];
@@ -240,6 +241,7 @@ window.onload = function () {
         }
 
         set_chat (new_case) {
+            new_case.date = this.nbr_coup;
             this.chat.set_etat("libre");
             this.chat.show();
             this.chat = this.plateau[new_case.place.x][new_case.place.y];
@@ -272,7 +274,6 @@ window.onload = function () {
     class IA {
 
         constructor (plateau){
-            this.nbr_coup = 0;
             this.pere = plateau;
             this.plateau = plateau.plateau;
             this.directions = this.pere.directions;
@@ -312,14 +313,6 @@ window.onload = function () {
             }
         }
 
-        touch_cliked_case(){
-            for (var dir in this.directions){
-                if (this.pere.chat.find_case_by_dir(dir).get_surrounding_cliked_case_number() =! 1){
-                    this.directions[dir] += 2 * (6-this.pere.chat.find_case_by_dir(dir).get_surrounding_cliked_case_number());
-                }
-            }
-        }
-
         go_to_border (){
             for (var dir in this.directions){
                 if (this.pere.chat.find_case_by_dir(dir).is_border()){
@@ -331,7 +324,22 @@ window.onload = function () {
         continue_same_dir(){
             for (var dir in this.directions){
                 if (dir === this.last_direction && dir !== this.dir){
-                    this.directions[dir] += random(7, 8)
+                    this.directions[dir] += random(7, 9);
+                }
+            }
+        }
+
+        surrounded(){
+            for (var dir in this.directions){
+                this.directions[dir] /= (this.pere.chat.find_case_by_dir(dir).get_cliked_nbr() + 1);
+            }
+        }
+
+        near_border(){
+            for (var dir in this.directions){
+                var ma_case = this.pere.chat.find_case_by_dir(dir)
+                if (ma_case.get_border_distance() === 1 && ma_case.get_cliked_nbr() === 0){
+                    this.directions[dir] += 50;
                 }
             }
         }
@@ -346,6 +354,9 @@ window.onload = function () {
 
         nbr_passage(){
             for (var dir in this.directions){
+                if (this.pere.nbr_coup - this.pere.chat.find_case_by_dir(dir).date > 4){
+                    this.pere.chat.find_case_by_dir(dir).nbr_passage = 0;
+                }
                 if (this.pere.chat.find_case_by_dir(dir).nbr_passage > 0){
                     this.directions[dir] = random(0.5, 1);
                 }
@@ -356,21 +367,31 @@ window.onload = function () {
             this.last_direction = this.dir_retenue;
         }
 
+        check_victory_or_deafet(){
+            if (this.directions[this.dir_retenue] === 0){
+                console.log("Gagné");
+            }
+            if(this.pere.chat.find_case_by_dir(this.dir_retenue).is_border()){
+                console.log("Perdu !");
+            }
+        }
+
         decide (){
             this.directions = {"hg": 0, "bg": 0, "mg": 0, "hd": 0, "bd": 0, "md": 0};
             this.base();
             this.good_dir();
             this.near_good_direction();
             this.not_opposite_dir();
-            this.touch_cliked_case();
             this.go_to_border();
             this.continue_same_dir();
+            this.surrounded();
+            this.near_border();
             this.nbr_passage();
             this.not_plein();
             this.dir_retenue = find_object_max_value(this.directions);
             this.manage_dir();
             this.debug();
-            console.log(this.directions[this.dir_retenue]);
+            this.check_victory_or_deafet();
             return this.dir_retenue;
         }
 
@@ -391,10 +412,10 @@ window.onload = function () {
         var Y = event.clientY;
         var case_cliquee = a.onMouse_case(X, Y);
         if (case_cliquee.etat === "libre"){
+            a.nbr_coup += 1;
             case_cliquee.set_etat("plein");
             a.move_chat(ia.decide());
-            ia.nbr_coup += 1;
-            console.log(ia.last_direction);
+            console.log(ia.directions[ia.dir_retenue]);
             //a.show();
         }
     }

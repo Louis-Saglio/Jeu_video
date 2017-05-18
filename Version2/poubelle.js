@@ -161,4 +161,17 @@ verifie_victory (){
     }
 }
 
+touch_cliked_case(){
+    for (var dir in this.directions){
+        if (this.pere.chat.find_case_by_dir(dir).get_surrounding_cliked_case_number() !== 1){
+            this.directions[dir] += 2 * (6-this.pere.chat.find_case_by_dir(dir).get_surrounding_cliked_case_number());
+        }
+    }
+}
+
+manage_dir(){
+    this.last_directions.push(this.dir);
+    this.last_directions = this.last_directions.slice(this.last_directions.length-3, this.last_directions.length);
+}
+
 console.log(find_object_max_value({"hg": 0, "bg": 0, "mg": 0, "hd": 0, "bd": 1, "md": 0}));
