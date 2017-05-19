@@ -60,13 +60,13 @@ window.onload = function () {
             var value = obj[key];
             var clef = key;
             break;
-        };
+        }
         for (var key in obj){
             if (obj[key] > value) {
                 value = obj[key];
                 clef = key;
             }
-        };
+        }
         return clef;
 }
 
@@ -108,7 +108,7 @@ window.onload = function () {
     class Case {
 
         constructor(x, y, id, pere, context) {
-            this.context = context
+            this.context = pere.context;
             this.pere = pere;
             this.id = id;
             this.largeur = pere.largeur_case;
@@ -165,19 +165,11 @@ window.onload = function () {
             var y = this.coord.y;
             image.onload = function () {
                 self.context.drawImage(image, x, y);
-                // Outil de debug :
-                // canvas.beginPath();
-                // canvas.fillStyle = "#FF0000";
-                // canvas.fillText(self.id,x + 25 ,y + 25);
-                // canvas.closePath();
             };
         }
 
         is_border (){
-            if (this.id % 11 === 0 || this.id % 11 === 10 || this.id < 11 || (this.id < 121 && this.id > 109)){
-                return true;
-            }
-            else { return false };
+            return this.id % 11 === 0 || this.id % 11 === 10 || this.id < 11 || (this.id < 121 && this.id > 109);
         }
 
         find_case_by_dir (dir){
@@ -202,9 +194,9 @@ window.onload = function () {
 
     class Plateau {
 
-        constructor(canvas) {
-            this.canvas = canvas;
-            this.context = this.canvas.getContext("2d");
+        constructor(manager) {
+            this.manager = manager;
+            this.context = manager.context;
             this.nbr_coup = 0;
             this.largeur_case = 50;
             this.largeur_plateau = 11;
@@ -265,7 +257,7 @@ window.onload = function () {
         base (){
             for (var dir in this.directions){
                 this.directions[dir] += random(1.1, 2);
-            };
+            }
         }
 
         good_dir (){
@@ -273,7 +265,7 @@ window.onload = function () {
                 if (dir === this.dir){
                     this.directions[dir] += random(8, 10);
                 }
-            };
+            }
         }
 
         near_good_direction(){
@@ -283,7 +275,7 @@ window.onload = function () {
 
         not_opposite_dir(){
             for (var dir in this.directions){
-                if (this.pere.chat.find_case_by_dir(dir) != opposite_dir(this.dir)){
+                if (this.pere.chat.find_case_by_dir(dir) !== opposite_dir(this.dir)){
                     this.directions[dir] += random(6, 8);
                 }
             }
@@ -294,7 +286,7 @@ window.onload = function () {
                 if (this.pere.chat.find_case_by_dir(dir).is_border()){
                     this.directions[dir] += 100;
                 }
-            };
+            }
         }
 
         continue_same_dir(){
@@ -313,7 +305,7 @@ window.onload = function () {
 
         near_border(){
             for (var dir in this.directions){
-                var ma_case = this.pere.chat.find_case_by_dir(dir)
+                var ma_case = this.pere.chat.find_case_by_dir(dir);
                 if (ma_case.get_border_distance() === 1 && ma_case.get_cliked_nbr() === 0){
                     this.directions[dir] += 50;
                 }
@@ -324,8 +316,8 @@ window.onload = function () {
             for (var dir in this.directions){
                 if (this.pere.chat.find_case_by_dir(dir).etat === "plein") {
                     this.directions[dir] = 0;
-                };
-            };
+                }
+            }
         }
 
         nbr_passage(){
@@ -345,10 +337,10 @@ window.onload = function () {
 
         check_victory_or_deafet(){
             if (this.directions[this.dir_retenue] === 0){
-                console.log("Gagné");
+                this.pere.manager.victory();
             }
             if(this.pere.chat.find_case_by_dir(this.dir_retenue).is_border()){
-                console.log("Perdu !");
+                this.pere.manager.game_over();
             }
         }
 
@@ -367,34 +359,66 @@ window.onload = function () {
             this.dir_retenue = find_object_max_value(this.directions);
             this.manage_dir();
             this.check_victory_or_deafet();
-            return this.dir_retenue;
+            for (var dir in this.directions){
+                console.log(dir, this.directions[dir]);
+            }
+            if (this.pere.manager.continue_game === true) {
+                this.pere.move_chat(this.dir_retenue);
+            }
         }
-
     }
+
 
     class Game_manager {
 
         constructor(){
-            this.canvas = document.getElementById("canvas")
-            this.plateau = new Plateau(this.canvas);
-            this.ia = new IA(this.plateau);
+            this.canvas = document.getElementById("canvas");
+            this.context = this.canvas.getContext("2d");
+            this.new_game = document.getElementById("new_game");
+            var self = this;
+            this.new_game.onclick = function () { self.play() };
         }
 
         play(){
             var self = this;
-            this.canvas.onclick = function (event) {
+            self.continue_game = true;
+            self.plateau = new Plateau(this);
+            self.ia = new IA(this.plateau);
+            self.canvas.onclick = function (event) {
                 var x = event.clientX;
                 var y = event.clientY;
                 var case_cliquee = self.plateau.onMouse_case(x, y);
-                if (case_cliquee.etat === "libre"){
-                    self.plateau.nbr_coup += 1;
+                if (case_cliquee.etat === "libre" && self.continue_game === true){
                     case_cliquee.set_etat("plein");
-                    self.plateau.move_chat(self.ia.decide());
+                    self.ia.decide();
+                    self.plateau.nbr_coup += 1;
                 }
             }
         }
 
+        game_over(){
+            this.continue_game = false;
+            var self = this;
+            self.context.clearRect(0, 0, 600, 550);
+            var image = new Image();
+            image.src = "images/perdu.jpg?t=" + Math.random();
+            image.onload = function () {
+                self.context.drawImage(image, 0, 0);
+            }
+        }
+
+        victory(){
+            this.continue_game = false;
+            var self = this;
+            self.context.clearRect(0, 0, 600, 550);
+            var image = new Image();
+            image.src = "images/victoire.jpg?t=" + Math.random();
+            image.onload = function () {
+                self.context.drawImage(image, 0, 0);
+            }
+        }
     }
+
 
     var manager = new Game_manager();
     manager.play();
