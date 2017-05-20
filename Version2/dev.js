@@ -164,6 +164,7 @@ window.onload = function () {
             var x = this.coord.x;
             var y = this.coord.y;
             image.onload = function () {
+                console.log("image");
                 self.context.drawImage(image, x, y);
             };
         }
@@ -322,7 +323,7 @@ window.onload = function () {
 
         nbr_passage(){
             for (var dir in this.directions){
-                if (this.pere.nbr_coup - this.pere.chat.find_case_by_dir(dir).date > 4){
+                if (this.pere.nbr_coup - this.pere.chat.find_case_by_dir(dir).date > 7){
                     this.pere.chat.find_case_by_dir(dir).nbr_passage = 0;
                 }
                 if (this.pere.chat.find_case_by_dir(dir).nbr_passage > 0){
@@ -337,9 +338,10 @@ window.onload = function () {
 
         check_victory_or_deafet(){
             if (this.directions[this.dir_retenue] === 0){
+                console.log("on charge");
                 this.pere.manager.victory();
             }
-            if(this.pere.chat.find_case_by_dir(this.dir_retenue).is_border()){
+            if(this.pere.chat.is_border()){
                 this.pere.manager.game_over();
             }
         }
@@ -358,13 +360,11 @@ window.onload = function () {
             this.not_plein();
             this.dir_retenue = find_object_max_value(this.directions);
             this.manage_dir();
-            this.check_victory_or_deafet();
             for (var dir in this.directions){
                 console.log(dir, this.directions[dir]);
             }
-            if (this.pere.manager.continue_game === true) {
-                this.pere.move_chat(this.dir_retenue);
-            }
+            this.pere.move_chat(this.dir_retenue);
+            this.check_victory_or_deafet();
         }
     }
 
@@ -381,6 +381,8 @@ window.onload = function () {
 
         play(){
             var self = this;
+            var player = document.getElementById("jeu");
+            player.play();
             self.continue_game = true;
             self.plateau = new Plateau(this);
             self.ia = new IA(this.plateau);
@@ -403,6 +405,7 @@ window.onload = function () {
             var image = new Image();
             image.src = "images/perdu.jpg?t=" + Math.random();
             image.onload = function () {
+                console.log("defaite");
                 self.context.drawImage(image, 0, 0);
             }
         }
@@ -414,6 +417,7 @@ window.onload = function () {
             var image = new Image();
             image.src = "images/victoire.jpg?t=" + Math.random();
             image.onload = function () {
+                console.log("victoire");
                 self.context.drawImage(image, 0, 0);
             }
         }
