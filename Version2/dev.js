@@ -164,8 +164,24 @@ window.onload = function () {
             var x = this.coord.x;
             var y = this.coord.y;
             image.onload = function () {
-                console.log("image");
+                //console.log("image");
                 self.context.drawImage(image, x, y);
+            };
+        }
+
+        print_in (message){
+            var self = this;
+            var image = new Image();
+            image.src = this.get_image() + "?t=" + Math.random();
+            var x = this.coord.x;
+            var y = this.coord.y;
+            image.onload = function () {
+                self.context.drawImage(image, x, y);
+                // Outil de debug :
+                self.context.beginPath();
+                self.context.fillStyle = "#FF0000";
+                self.context.fillText(message, x + 15 , y + 25);
+                self.context.closePath();
             };
         }
 
@@ -246,14 +262,11 @@ window.onload = function () {
             this.pere = plateau;
             this.plateau = plateau.plateau;
             this.directions = this.pere.directions;
-            this.last_directions = [];
-            this.set_dir(shuffle(this.directions)[0]);
+            this.dir = shuffle(this.directions)[0];
         }
 
-        set_dir (new_dir){
-            this.last_directions.push(this.dir);
-            this.dir = new_dir;
-        }
+        // les méthodes suivantes modifient l'objet this.directions
+        // (voir d'abord les méthodes analyse et decide au ligne 364 et 380 pour une meilleur compréhension)
 
         base (){
             for (var dir in this.directions){
@@ -270,11 +283,13 @@ window.onload = function () {
         }
 
         near_good_direction(){
+            // augmente le potentiel des directions proches de la direction principale (this.dir)
             this.directions[find_alter_dir(this.dir)[0]] += random(7, 9);
             this.directions[find_alter_dir(this.dir)[1]] += random(7, 9);
         }
 
         not_opposite_dir(){
+            // augmente le potentiel des directions non opposées à la direction principale (this.dir)
             for (var dir in this.directions){
                 if (this.pere.chat.find_case_by_dir(dir) !== opposite_dir(this.dir)){
                     this.directions[dir] += random(6, 8);
@@ -291,6 +306,7 @@ window.onload = function () {
         }
 
         continue_same_dir(){
+            // favorise le déplacement en ligne droite plus efficace
             for (var dir in this.directions){
                 if (dir === this.last_direction && dir !== this.dir){
                     this.directions[dir] += random(7, 9);
@@ -299,12 +315,19 @@ window.onload = function () {
         }
 
         surrounded(){
+            // ne pas aller près des cases entourées de cases vertes
             for (var dir in this.directions){
-                this.directions[dir] /= (this.pere.chat.find_case_by_dir(dir).get_cliked_nbr() + 1);
+                if (this.pere.chat.find_case_by_dir(dir).get_cliked_nbr() !== 0) {
+                    this.directions[dir] /= (this.pere.chat.find_case_by_dir(dir).get_cliked_nbr());
+                }
+                if (this.pere.chat.find_case_by_dir(dir).get_cliked_nbr() === 1) {
+                    this.directions[dir] += random(6,8);
+                }
             }
         }
 
         near_border(){
+            // aller absolument sur les cases touchant deux cases de bordures libres
             for (var dir in this.directions){
                 var ma_case = this.pere.chat.find_case_by_dir(dir);
                 if (ma_case.get_border_distance() === 1 && ma_case.get_cliked_nbr() === 0){
@@ -314,6 +337,7 @@ window.onload = function () {
         }
 
         not_plein (){
+            // interdit d'aller sur les cases vertes
             for (var dir in this.directions){
                 if (this.pere.chat.find_case_by_dir(dir).etat === "plein") {
                     this.directions[dir] = 0;
@@ -322,8 +346,10 @@ window.onload = function () {
         }
 
         nbr_passage(){
+            // ne pas aller sur les cases ou le chat est déjà allé
             for (var dir in this.directions){
-                if (this.pere.nbr_coup - this.pere.chat.find_case_by_dir(dir).date > 7){
+                if (this.pere.nbr_coup - this.pere.chat.find_case_by_dir(dir).date > 5){
+                    // on efface l'historique de plus de 10 tours
                     this.pere.chat.find_case_by_dir(dir).nbr_passage = 0;
                 }
                 if (this.pere.chat.find_case_by_dir(dir).nbr_passage > 0){
@@ -332,21 +358,18 @@ window.onload = function () {
             }
         }
 
-        manage_dir(){
-            this.last_direction = this.dir_retenue;
-        }
-
         check_victory_or_deafet(){
             if (this.directions[this.dir_retenue] === 0){
-                console.log("on charge");
-                this.pere.manager.victory();
+                console.log("victoire");
+                //this.pere.manager.victory();
             }
             if(this.pere.chat.is_border()){
-                this.pere.manager.game_over();
+                console.log("défaite");
+                //this.pere.manager.game_over();
             }
         }
 
-        decide (){
+        analyse (){
             this.directions = {"hg": 0, "bg": 0, "mg": 0, "hd": 0, "bd": 0, "md": 0};
             this.base();
             this.good_dir();
@@ -359,12 +382,18 @@ window.onload = function () {
             this.nbr_passage();
             this.not_plein();
             this.dir_retenue = find_object_max_value(this.directions);
-            this.manage_dir();
-            for (var dir in this.directions){
-                console.log(dir, this.directions[dir]);
-            }
+        }
+
+        decide (){
+            this.last_direction = this.dir_retenue;
+            this.analyse();
             this.pere.move_chat(this.dir_retenue);
             this.check_victory_or_deafet();
+            console.log(this.directions[this.dir_retenue]);
+            this.analyse();
+            for (var dir in this.directions){
+                this.pere.chat.find_case_by_dir(dir).print_in(arrondir(this.directions[dir]));
+            }
         }
     }
 
@@ -405,7 +434,7 @@ window.onload = function () {
             var image = new Image();
             image.src = "images/perdu.jpg?t=" + Math.random();
             image.onload = function () {
-                console.log("defaite");
+                //console.log("defaite");
                 self.context.drawImage(image, 0, 0);
             }
         }
@@ -417,7 +446,7 @@ window.onload = function () {
             var image = new Image();
             image.src = "images/victoire.jpg?t=" + Math.random();
             image.onload = function () {
-                console.log("victoire");
+                //console.log("victoire");
                 self.context.drawImage(image, 0, 0);
             }
         }
