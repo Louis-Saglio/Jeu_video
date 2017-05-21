@@ -360,12 +360,12 @@ window.onload = function () {
 
         check_victory_or_deafet(){
             if (this.directions[this.dir_retenue] === 0){
-                console.log("victoire");
-                //this.pere.manager.victory();
+                //console.log("victoire");
+                this.pere.manager.victory();
             }
             if(this.pere.chat.is_border()){
-                console.log("défaite");
-                //this.pere.manager.game_over();
+                //console.log("défaite");
+                this.pere.manager.game_over();
             }
         }
 
@@ -389,11 +389,11 @@ window.onload = function () {
             this.analyse();
             this.pere.move_chat(this.dir_retenue);
             this.check_victory_or_deafet();
-            console.log(this.directions[this.dir_retenue]);
-            this.analyse();
-            for (var dir in this.directions){
-                this.pere.chat.find_case_by_dir(dir).print_in(arrondir(this.directions[dir]));
-            }
+            //console.log(this.directions[this.dir_retenue]);
+            // this.analyse();
+            // for (var dir in this.directions){
+            //     this.pere.chat.find_case_by_dir(dir).print_in(arrondir(this.directions[dir]));
+            // }
         }
     }
 
@@ -403,17 +403,37 @@ window.onload = function () {
         constructor(){
             this.canvas = document.getElementById("canvas");
             this.context = this.canvas.getContext("2d");
-            this.new_game = document.getElementById("new_game");
+            this.facile = document.getElementById("facile");
+            this.intermediaire = document.getElementById("intermediaire");
+            this.difficile = document.getElementById("difficile");
+            this.difficulte = 10;
             var self = this;
-            this.new_game.onclick = function () { self.play() };
+            this.facile.onclick = function () {
+                self.difficulte = 10;
+                self.play();
+            };
+            this.intermediaire.onclick = function () {
+                self.difficulte = 5;
+                self.play();
+            };
+            this.difficile.onclick = function () {
+                self.difficulte = 0;
+                self.play();
+            };
         }
 
         play(){
             var self = this;
-            var player = document.getElementById("jeu");
-            player.play();
+            var musique = document.getElementById("jeu");
+            musique.play();
             self.continue_game = true;
             self.plateau = new Plateau(this);
+            for (var i=0; i<self.difficulte; i++){
+                var a = Math.round(Math.random() * 10);
+                var b = Math.round(Math.random() * 10);
+                if (a !== 5 || b !== 5) { self.plateau.plateau[a][b].set_etat("plein") }
+                else { ( i-= 1) }
+            }
             self.ia = new IA(this.plateau);
             self.canvas.onclick = function (event) {
                 var x = event.clientX;
