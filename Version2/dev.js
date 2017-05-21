@@ -5,7 +5,7 @@
 window.onload = function () {
 
     function shuffle(b)
-    // mélange aléatoirement un objet
+    // transforme un objet en liste de ses clefs et mélange cette liste
     {
         var a = [];
         for (var e in b){
@@ -17,7 +17,7 @@ window.onload = function () {
         var l = a.length - 1;
         while(l > -1)
         {
-            j = Math.floor(Math.random() * l);
+            j = Math.floor(Math.random());
             valI = a[l];
             valJ = a[j];
             a[l] = valJ;
@@ -28,6 +28,8 @@ window.onload = function () {
     }
 
     function find_alter_dir(dir) {
+        // renvoie les deux directions les plus proches d'une direction donnée
+        // h = haut, b = bas, m = milieu, g = gauche, d = droit
         if (dir === "hg") return ["mg", "hd"];
         if (dir === "hd") return ["md", "hg"];
         if (dir === "bg") return ["mg", "bd"];
@@ -37,6 +39,8 @@ window.onload = function () {
     }
 
     function numerise_dir (dir, une_case){
+        // renvoie les nombres à ajouter aux coordonnées théoriques le case "une_case" pour obtenir les coordonnées
+        // théoriques de la case se touvant dans la direction "dir " par rapport à "une_case"
         var y = 1;
         if (dir[0] === "h") y = -1;
         if (dir[1] === "g") {
@@ -56,6 +60,7 @@ window.onload = function () {
     }
 
     function find_object_max_value (obj){
+        // renvoie la clef de la valeur maximale d'un objet contenant uniquement des nombres
         for (var key in obj){
             var value = obj[key];
             var clef = key;
@@ -70,19 +75,12 @@ window.onload = function () {
         return clef;
 }
 
-    function declare_victory (){
-        alert("Victoire !");
-    }
-
-    function rand(fct) {
-        return (Math.random() * (fct-1)) + 1;
-    }
-
     function arrondir(nbr){
         return Math.round(nbr * 1000) / 1000;
     }
 
     function opposite_dir(dir) {
+        // retorne la direction opposée à "dir"
         if (dir === "hg") return "bd";
         if (dir === "hd") return "bg";
         if (dir === "bg") return "hd";
@@ -95,19 +93,11 @@ window.onload = function () {
         return (max - min) * Math.random() + min
     }
 
-    function count_items(liste, item){
-        var nbr = 0;
-        for (var element of liste){
-            if (item === element){
-                nbr += 1;
-            }
-        }
-        return nbr;
-    }
-
     class Case {
 
-        constructor(x, y, id, pere, context) {
+        constructor(x, y, id, pere) {
+            // x et y sont les coordonnées théorique du coin sup gauche de la case et varient de 0 à 10
+            // pere et le plateau de jeu appellé ainsi en raison des principes de communication inter-classes
             this.context = pere.context;
             this.pere = pere;
             this.id = id;
@@ -118,6 +108,7 @@ window.onload = function () {
         }
 
         set_coord() {
+            // définis les coordonnées réelles  de la case sur le canvas en fonctions des coordonnées théoriques
             this.coord = {};
             this.coord.y = this.place.y * this.largeur;
             if (this.place.y % 2 === 0) {
@@ -129,6 +120,7 @@ window.onload = function () {
         }
 
         set_place(x, y) {
+            // this.place.x et this.place.y sont les coordonnées théoriques
             this.place = {};
             this.place.x = x;
             this.place.y = y;
@@ -136,6 +128,7 @@ window.onload = function () {
         }
 
         set_etat(etat) {
+            // syncronise la modification de l'état de la case avec son image et le nombre de passage du chat
             if (etat === "chat") this.nbr_passage += 1;
             this.etat = etat;
             this.image = "images/" + this.etat + ".jpg";
@@ -158,6 +151,7 @@ window.onload = function () {
         }
 
         show() {
+            // affiche la case au bon endroit
             var self = this;
             var image = new Image();
             image.src = this.get_image() + "?t=" + Math.random();
@@ -170,6 +164,7 @@ window.onload = function () {
         }
 
         print_in (message){
+            // affiche un message dans la case. (debugage)
             var self = this;
             var image = new Image();
             image.src = this.get_image() + "?t=" + Math.random();
@@ -177,7 +172,6 @@ window.onload = function () {
             var y = this.coord.y;
             image.onload = function () {
                 self.context.drawImage(image, x, y);
-                // Outil de debug :
                 self.context.beginPath();
                 self.context.fillStyle = "#FF0000";
                 self.context.fillText(message, x + 15 , y + 25);
@@ -186,22 +180,25 @@ window.onload = function () {
         }
 
         is_border (){
-            return this.id % 11 === 0 || this.id % 11 === 10 || this.id < 11 || (this.id < 121 && this.id > 109);
+            return this.get_border_distance() === 0;
+
         }
 
         find_case_by_dir (dir){
+            // renvoie la case se trouvant dans la direction dir par rapport à this
             var position_increments = numerise_dir(dir, this);
             return this.pere.plateau[position_increments.x + this.place.x][position_increments.y + this.place.y]
         }
 
         get_cliked_nbr (){
+            // renvoie le nombre de case verte touchant this
             var number = 0;
             for (var dir in this.pere.directions){
                 try{
                     if (this.find_case_by_dir(dir).etat === "plein") { number += 1 }
                 }
                 catch (e){
-                    // number += 0;
+                    // en bord de plateau il n'y a pas de case partout autour
                 }
             }
             return number;
@@ -212,6 +209,7 @@ window.onload = function () {
     class Plateau {
 
         constructor(manager) {
+            // manager et le manager de jeu (Classe Game_manager à la ligne 399)
             this.manager = manager;
             this.context = manager.context;
             this.nbr_coup = 0;
@@ -224,7 +222,7 @@ window.onload = function () {
             for (var ligne=0; ligne<this.largeur_plateau; ligne+=1){
                 this.plateau.push([]);
                 for (var colonne=0; colonne<this.largeur_plateau; colonne+=1){
-                    var ma_case = new Case(ligne, colonne, id, this, this.context);
+                    var ma_case = new Case(ligne, colonne, id, this);
                     id += 1;
                     this.plateau[ligne].push(ma_case);
                 }
@@ -243,6 +241,8 @@ window.onload = function () {
         }
 
         onMouse_case (x, y) {
+            // récupère la case où se trouvent les coordonnées x et y du canvas
+            // (utilisé pour récupérer la position de la souris)
             y = (y - (y % this.largeur_case)) / this.largeur_case;
             if (y % 2 === 0){
                 x -= this.largeur_case / 2;
