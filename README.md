@@ -10,11 +10,11 @@ JavaScript est un langage avec une philosophie assez différente des autres lang
 Nous avons donc décidé de partir sur un développement from scratch afin de bien assimiler la philosophie et les mécanismes de base de JavaScript.
 
 ## Choix du gameplay
-Sans Framework, il est beaucoup plus difficile de créer des effets graphiques. Un gameplay graphiquement simple c’est donc imposé. Pour contrebalancer cette faciliter et ajouter un peu de difficulté au développement, nous avons pensé qu’un jeu nécessitant une I.A. serait intéressant.
-C’est alors présenté à notre esprit un jeu nommé « Le jeu du chat noir » où il s’agit de bloquer un chat se déplaçant sur des cases placées un quinconce. 
+Sans Framework, il est beaucoup plus difficile de créer des effets graphiques. Un gameplay graphiquement simple s’est donc imposé. Pour contrebalancer cette faciliter et ajouter un peu de difficulté au développement, nous avons pensé qu’un jeu nécessitant une "I.A." serait intéressant.
+S’est alors présenté à notre esprit un jeu nommé « Le jeu du chat noir » où il s’agit de bloquer un chat se déplaçant sur des cases placées un quinconce. 
 
 ## Difficultés rencontrées
-Le code du jeu peut être découpé en trois partie :
+Le code du jeu peut être découpé en trois parties :
 1.	Le moteur graphique
 2.	L’intelligence artificielle
 3.	Le gestionnaire de jeu
@@ -24,11 +24,11 @@ Vu cette complexité algorithmique il nous a été obligatoire d’implémenter 
 Le moteur graphique a connu quatre versions différentes avec une amélioration majeur des classes à la troisième version. Étonnamment cette version a été perturbée par un bug dût au cache du navigateur malgré sa désactivation dans les paramètres de développement.
 ### Intelligence artificielle
 L’intelligence artificielle du chat fut la principale difficulté du développement du jeu. En effet, bien que fort basique (pas d’apprentissage artificiel) elle nous a pris au moins 75 % du temps homme disponible. Nous nous sommes rendu compte que plus nous l’améliorions plus elle nous semblait améliorable.
-Nous l’avons redéveloppé en tout quatre fois, dont deux versions totalement différente.
+Nous l’avons redéveloppé en tout quatre fois, dont deux versions totalement différentes.
 La première version utilisait extensivement les arrays ce qui ne nous a finalement pas semblé une bonne idée en JavaScript, puisque nous devions souvent développer nous-mêmes des méthodes élémentaires d’array, avec tous les risques de bug que cela comporte.
 La seconde version utilise plus-tôt les objets d’utilisation plus intuitive.
 ### Gestionnaire de jeux
-Fort de l’expérience gagnée grâce aux deux parties précédentes, le gestionnaire de jeu c’est fait très rapidement sans difficulté.
+Fort de l’expérience gagnée grâce aux deux parties précédentes, le gestionnaire de jeu a été programmé très rapidement sans difficulté majeures.
 ## Bugs connus
 Parfois en début de jeu l’image du chat ne se charge pas, cependant le chat est bien présent et le bug se corrige au deuxième tour.
 Au moment de la victoire ou de la défaite, le chat ou une case peut apparaitre à travers l’image de victoire ou de défaite. Cela est dût à l’asynchronicité de Javascript. Pour corriger ce bug il faudrait développer une nouvelle version assez différente de l’actuelle. Nous n’en avons malheureusement pas le temps.
